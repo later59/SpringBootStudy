@@ -1,0 +1,13 @@
+friend:
+  name: 张三
+  age: 18
+  list:
+    - list1
+    - list2
+    - list3
+  maps:
+    key1: value1
+    key2:  value2
+  dog:
+    name: 旺财
+    age: 2
