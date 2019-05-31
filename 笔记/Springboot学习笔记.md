@@ -83,7 +83,7 @@
 
 ![](./images/4.jpg)
 
-第三步：
+第三步：选择版本和需要的依赖
 
 ![](./images/5.jpg)
 
@@ -428,6 +428,8 @@ pets: [cat,dog,pig]
 
 ### 3）配置文件值的注入
 
+###### **使用@ConfigurationProperties**注入
+
 **①：导入配置处理器**
 
 ```xml
@@ -452,12 +454,14 @@ pets: [cat,dog,pig]
  * 这个组件必须是容器中的组件，才能使用容器提供的@ConfigurationProperties 功能
  */
 @Component
-@ConfigurationProperties(prefix = "friend")
-public class Friend {
+@ConfigurationProperties(prefix = "person")
+public class Person {
 
     private String name;
 
     private int age;
+
+    private Date birthday;
 
     private List<String> list;
 
@@ -505,12 +509,20 @@ public class Friend {
         this.dog = dog;
     }
 
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
 
     @Override
     public String toString() {
-        return "Friend{" +
+        return "Person{" +
                 "name='" + name + '\'' +
                 ", age=" + age +
+                ", birthday=" + birthday +
                 ", list=" + list +
                 ", maps=" + maps +
                 ", dog=" + dog +
@@ -555,7 +567,7 @@ public class Dog {
 **③：YMAL编写**
 
 ```yam
-friend:
+person:
   name: 张三
   age: 18
   list:
@@ -568,10 +580,248 @@ friend:
   dog:
     name: 旺财
     age: 2
+  birthday: 1997/10/28 10:59:59
 
 ```
 
 ④：使用SpringBoot提供的测试类测试
 
 ![](./images/11.jpg)
+
+
+
+**properties格式文件注入**
+
+将application.yml 中的配置注释，在application.properties 配置文件中编写
+
+```properties
+person.name=张三
+person.age=15
+person.list=1,2,3
+person.maps.key1=value1
+person.maps.key2=value2
+person.birthday=1999/12/10 10:30:44
+person.dog.name=旺财
+person.dog.age=3
+```
+
+其他不变，运行测试类
+
+这时候会发现中文是乱码的
+
+![](./images/12.jpg)
+
+找到File Encodings  ，勾选运行时转换成ASCII码，就不会乱码了
+
+![](./images/13.jpg)
+
+
+
+###### 使用@Value注入
+
+```java
+@Component
+public class PersonValue {
+
+    @Value("${person.name}")
+    private String name;
+
+    @Value("#{11*2}")
+    private int age;
+
+    private Date birthday;
+
+    private List<String> list;
+
+    private Map<String, String> maps;
+
+    private Dog dog;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public List<String> getList() {
+        return list;
+    }
+
+    public void setList(List<String> list) {
+        this.list = list;
+    }
+
+    public Map<String, String> getMaps() {
+        return maps;
+    }
+
+    public void setMaps(Map<String, String> maps) {
+        this.maps = maps;
+    }
+
+    public Dog getDog() {
+        return dog;
+    }
+
+    public void setDog(Dog dog) {
+        this.dog = dog;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", birthday=" + birthday +
+                ", list=" + list +
+                ", maps=" + maps +
+                ", dog=" + dog +
+                '}';
+    }
+}
+```
+
+
+
+###### @ConfigurationProperties与@Value注入的区别
+
+|                      | @ConfigurationProperties | @Value     |
+| -------------------- | :----------------------- | ---------- |
+| 功能                 | 批量注入配置文件中的属性 | 一个个指定 |
+| 松散绑定（松散语法） | 支持                     | 不支持     |
+| SpEL                 | 不支持                   | 支持       |
+| JSR303数据校验       | 支持                     | 不支持     |
+| 复杂类型封装         | 支持                     | 不支持     |
+|                      |                          |            |
+
+
+
+###### @PropertySource，指定读取的配置文件
+
+```java
+/**
+ * @PropertySource：指定加载某个配置文件中配置
+ * value：配置文件路径
+ */
+@Component
+@PropertySource(value = {"classpath:personSource.properties"})
+@ConfigurationProperties(prefix = "personsourcebean")
+public class PersonSourceBean {
+    private String name;
+
+    private int age;
+
+    private Date birthday;
+
+    private List<String> list;
+
+    private Map<String, String> maps;
+
+    private Dog dog;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public List<String> getList() {
+        return list;
+    }
+
+    public void setList(List<String> list) {
+        this.list = list;
+    }
+
+    public Map<String, String> getMaps() {
+        return maps;
+    }
+
+    public void setMaps(Map<String, String> maps) {
+        this.maps = maps;
+    }
+
+    public Dog getDog() {
+        return dog;
+    }
+
+    public void setDog(Dog dog) {
+        this.dog = dog;
+    }
+
+    public Date getBirthday() {
+        return birthday;
+    }
+
+    public void setBirthday(Date birthday) {
+        this.birthday = birthday;
+    }
+
+    @Override
+    public String toString() {
+        return "PersonSourceBean{" +
+                "name='" + name + '\'' +
+                ", age=" + age +
+                ", birthday=" + birthday +
+                ", list=" + list +
+                ", maps=" + maps +
+                ", dog=" + dog +
+                '}';
+    }
+}
+```
+
+@ImportResource
+
+> 导入Spring的配置文件，让配置文件里面的内容生效；
+
+Spring Boot里面没有Spring的配置文件，我们自己编写的配置文件，也不能自动识别；
+
+想让Spring的配置文件生效，加载进来；@**ImportResource**标注在一个配置类上
+
+```java
+@ImportResource(locations = {"classpath:beans.xml"})
+导入Spring的配置文件，让其生效
+```
+
+配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+    <bean id="importResourceService" class="com.rock.service.ImportResourceService"></bean>
+</beans>
+```
+
+
 
