@@ -29,10 +29,9 @@ public class SpringbootConfigApplicationTests {
 
     @Test
     public void contextLoads() {
-
         //System.out.println(personSourceBean.toString());
         //System.out.println(context.containsBean("importResourceService"));
-        System.out.println(context.containsBean("testService"));
+        System.out.println(person);
     }
 
 }

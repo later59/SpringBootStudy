@@ -97,7 +97,7 @@
 
 # 五、HelloWorld实例
 
-代码：springboot_example项目
+**代码：springboot_example项目**
 
 第一步：创建一个Springboot项目
 
@@ -320,7 +320,7 @@ protected AutoConfigurationImportSelector.AutoConfigurationEntry getAutoConfigur
 
 # 七、SpringBoot的配置文件
 
-代码：springboot_config 项目中
+**代码：springboot_config 项目中**
 
 SpringBoot使用一个全局的配置文件，配置文件名是固定的；
 
@@ -805,11 +805,18 @@ public class PersonSourceBean {
 
 Spring Boot里面没有Spring的配置文件，我们自己编写的配置文件，也不能自动识别；
 
-想让Spring的配置文件生效，加载进来；@**ImportResource**标注在一个配置类上
+想让Spring的配置文件生效，加载进来；@**ImportResource**标注在启动类上
 
 ```java
 @ImportResource(locations = {"classpath:beans.xml"})
-导入Spring的配置文件，让其生效
+@SpringBootApplication
+public class SpringbootConfigApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringbootConfigApplication.class, args);
+    }
+
+}
 ```
 
 配置文件
@@ -830,18 +837,52 @@ Spring Boot里面没有Spring的配置文件，我们自己编写的配置文件
  * @Configuration:表示该类为一个配置类
  */
 @Configuration
-public class TestConfig {
+public class ImportResourceConfig {
 
     /**
-     * 注入的名称就是方法的名称
+     * 将方法的返回值添加到容器中
+     * 容器中组件的ID就是方法的名称
      * @return 需要注入的对象
      */
     @Bean
-    public TestService testService() {
+    public ImportResourceService importResourceService() {
         System.out.println("进入配置配置类方法");
-        return new TestService();
+        return new ImportResourceService();
     }
 }
+```
 
+两者选其一，SpringBoot推荐使用@Bean注入
+
+## 4）配置文件占位符
+
+### ①、随机数
+
+```java
+${random.value}：产生一个随机字符串
+${random.int}：产生一个随机整数
+${random.long}：产生一个随机long类型数字
+${random.int(10)}：产生一个小于10的整数
+${random.int[1,4]}：产生一个大于等于1小于4的整数
+
+```
+
+②、获取之前配置的值
+
+```java
+${字段名}
+```
+
+实例：
+
+```properties
+person.name=张三${random.value}
+person.age=${random.int[1,2]}
+person.list=1,2,3
+person.maps.key1=value1
+person.maps.key2=value2
+person.birthday=1999/12/10 10:30:44
+person.dog.name=${person.name}旺财
+person.dog.age=${random.int(1,4)}
 ```
 
