@@ -867,7 +867,7 @@ ${random.int[1,4]}：产生一个大于等于1小于4的整数
 
 ```
 
-②、获取之前配置的值
+### ②、获取之前配置的值
 
 ```java
 ${字段名}
@@ -885,4 +885,30 @@ person.birthday=1999/12/10 10:30:44
 person.dog.name=${person.name}旺财
 person.dog.age=${random.int(1,4)}
 ```
+
+# 八、Profile多环境配置
+
+**代码：springboot_profile项目**
+
+1、多Profile文件
+
+> 将properties或者yml文件按：application-{profile}.properties，application-{profile}.yml
+
+例如：application-dev.properties
+
+2、yml支持多文档块方式
+
+3、激活指定profile
+
+①：springboot默认使用：application.properties，可以再默认使用的配置文件中激活profile文件
+
+spring.profiles.active=profile名称
+
+例：
+
+```properties
+spring.profiles.active=dev
+```
+
+②：命令行激活
 
