@@ -890,6 +890,8 @@ person.dog.age=${random.int(1,4)}
 
 **代码：springboot_profile项目**
 
+注意：如果application.properties与application.yml 同时存在时，application.properties生效
+
 1、多Profile文件
 
 > 将properties或者yml文件按：application-{profile}.properties，application-{profile}.yml
@@ -897,6 +899,26 @@ person.dog.age=${random.int(1,4)}
 例如：application-dev.properties
 
 2、yml支持多文档块方式
+
+```yml
+spring:
+  profiles:
+    active: dev
+---
+spring:
+  profiles: prod
+server:
+  port: 8082
+
+---
+spring:
+  profiles: dev
+server:
+  port: 8083
+
+```
+
+> 使用  ---  在yml文件中隔开多个document，可以用：spring:profiles:  给每个document取名，再使用active激活不同的document
 
 3、激活指定profile
 
@@ -912,3 +934,10 @@ spring.profiles.active=dev
 
 ②：命令行激活
 
+--spring.profiles.active=dev
+
+![](./images/14.jpg)
+
+> 如果使用命令行激活，会以命令行激活的为准
+
+③：
