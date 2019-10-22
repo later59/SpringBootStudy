@@ -892,13 +892,13 @@ person.dog.age=${random.int(1,4)}
 
 注意：如果application.properties与application.yml 同时存在时，application.properties生效
 
-1、多Profile文件
+## 1、多Profile文件
 
 > 将properties或者yml文件按：application-{profile}.properties，application-{profile}.yml
 
 例如：application-dev.properties
 
-2、yml支持多文档块方式
+## 2、yml支持多文档块方式
 
 ```yml
 spring:
@@ -920,7 +920,7 @@ server:
 
 > 使用  ---  在yml文件中隔开多个document，可以用：spring:profiles:  给每个document取名，再使用active激活不同的document
 
-3、激活指定profile
+## 3、激活指定profile
 
 ①：springboot默认使用：application.properties，可以再默认使用的配置文件中激活profile文件
 
@@ -940,4 +940,31 @@ spring.profiles.active=dev
 
 > 如果使用命令行激活，会以命令行激活的为准
 
-③：
+使用启动命令激活
+
+java -jar （jar包名称） --spring.profiles.active=dev
+
+![](./images/15.jpg)
+
+③：虚拟机参数
+
+-Dspring.profiles.active=dev
+
+![](./images/16.jpg)
+
+## 4、配置文件的加载位置
+
+springboot 启动会扫描以下位置的application.properties或者application.yml文件作为Spring boot的默认配置文 件
+–ﬁle:./conﬁg/
+–ﬁle:./ 
+
+–classpath:/conﬁg/ 
+
+–classpath:/
+优先级由高到底，高优先级的配置会覆盖低优先级的配置；
+  server:   port: 8081 spring:   profiles:     active: prod   ‐‐server:   port: 8083 spring:   profiles: dev     ‐‐  server:   port: 8084 spring:   profiles: prod  #指定属于哪个环境
+1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+SpringBoot会从这四个位置全部加载主配置文件；互补配置；  
+我们还可以通过spring.conﬁg.location来改变默认的配置文件位置
+项目打包好以后，我们可以使用命令行参数的形式，启动项目的时候来指定配置文件的新位置；指定配置文件和默 认加载的这些配置文件共同起作用形成互补配置；
+java -jar spring-boot-02-conﬁg-02-0.0.1-SNAPSHOT.jar --spring.conﬁg.location=G:/application.properties
