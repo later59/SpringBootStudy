@@ -956,15 +956,58 @@ java -jar （jar包名称） --spring.profiles.active=dev
 
 springboot 启动会扫描以下位置的application.properties或者application.yml文件作为Spring boot的默认配置文 件
 –ﬁle:./conﬁg/
+
 –ﬁle:./ 
 
 –classpath:/conﬁg/ 
 
 –classpath:/
-优先级由高到底，高优先级的配置会覆盖低优先级的配置；
-  server:   port: 8081 spring:   profiles:     active: prod   ‐‐server:   port: 8083 spring:   profiles: dev     ‐‐  server:   port: 8084 spring:   profiles: prod  #指定属于哪个环境
-1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-SpringBoot会从这四个位置全部加载主配置文件；互补配置；  
+
+**优先级由高到低，高优先级的配置会覆盖低优先级的配置；**
+
+SpringBoot会从这四个位置全部加载主配置文件；互补配置；
+
 我们还可以通过spring.conﬁg.location来改变默认的配置文件位置
-项目打包好以后，我们可以使用命令行参数的形式，启动项目的时候来指定配置文件的新位置；指定配置文件和默 认加载的这些配置文件共同起作用形成互补配置；
+
+项目打包好以后，我们可以使用命令行参数的形式，启动项目的时候来指定配置文件的新位置；指定配置文件和默 
+
+认加载的这些配置文件共同起作用形成互补配置；
+
 java -jar spring-boot-02-conﬁg-02-0.0.1-SNAPSHOT.jar --spring.conﬁg.location=G:/application.properties
+
+
+
+## 5、外部配置加载顺序
+
+**SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优先级的配置覆盖低优先级的配置，所有的配置会 形成互补配置**
+
+**由jar包外向jar包内进行寻找； 优先加载带proﬁle    再来加载不带proﬁle **
+
+1.命令行参数
+
+所有的配置都可以在命令行上进行指定
+
+java -jar spring-boot-02-conﬁg-02-0.0.1-SNAPSHOT.jar --server.port=8087 --server.context-path=/abc 
+
+多个配置用空格分开； --配置项=值  
+
+2.来自java:comp/env的JNDI属性 
+
+3.Java系统属性（System.getProperties()）
+
+4.操作系统环境变量 
+
+5.RandomValuePropertySource配置的random.* 属性值  
+
+6.jar包外部的application-{proﬁle}.properties或application.yml(带spring.proﬁle)配置文件
+
+7.jar包内部的application-{proﬁle}.properties或application.yml(带spring.proﬁle)配置文件  
+
+8.jar包外部的application.properties或application.yml(不带spring.proﬁle)配置文件 
+
+9.jar包内部的application.properties或application.yml(不带spring.proﬁle)配置文件
+
+10.@Conﬁguration注解类上的@PropertySource
+
+11.通过SpringApplication.setDefaultProperties指定的默认属性
+

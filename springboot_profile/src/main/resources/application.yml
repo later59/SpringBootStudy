@@ -1,15 +1,17 @@
-spring:
-  profiles:
-    active: prod
----
-spring:
-  profiles: prod
 server:
-  port: 8082
-
----
-spring:
-  profiles: dev
-server:
-  port: 8083
+  port: 8085
+#spring:
+#  profiles:
+#    active: prod
+#---
+#spring:
+#  profiles: prod
+#server:
+#  port: 8082
+#
+#---
+#spring:
+#  profiles: dev
+#server:
+#  port: 8083
 
