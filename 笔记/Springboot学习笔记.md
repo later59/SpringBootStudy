@@ -1,3 +1,5 @@
+
+
 # 一、什么是SprintBoot
 
 > Spring Boot 是 Spring 开源组织下的子项目，是 Spring 组件一站式解决方案，主要是简化了使用 Spring 的难度，简省了繁重的配置，提供了各种启动器，开发者能快速上手。
@@ -1010,4 +1012,345 @@ java -jar spring-boot-02-conﬁg-02-0.0.1-SNAPSHOT.jar --server.port=8087 --serv
 10.@Conﬁguration注解类上的@PropertySource
 
 11.通过SpringApplication.setDefaultProperties指定的默认属性
+
+
+
+# 九、自动配置原理
+
+官方配置参考地址：
+
+目录找：Common application properties
+
+https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties
+
+@SpringBootApplication注解：
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+@ConfigurationPropertiesScan
+```
+
+@EnableAutoConfiguration注解：利用AutoConfigurationImportSelector给容器中导入组件
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+```
+
+AutoConfigurationImportSelector.class
+
+selectImports()方法
+
+```java
+public String[] selectImports(AnnotationMetadata annotationMetadata) {
+		if (!isEnabled(annotationMetadata)) {
+			return NO_IMPORTS;
+		}
+		AutoConfigurationMetadata autoConfigurationMetadata = AutoConfigurationMetadataLoader
+				.loadMetadata(this.beanClassLoader);
+		AutoConfigurationEntry autoConfigurationEntry = getAutoConfigurationEntry(autoConfigurationMetadata,
+				annotationMetadata);//注意该行代码
+		return StringUtils.toStringArray(autoConfigurationEntry.getConfigurations());
+	}
+```
+
+getAutoConfigurationEntry()：方法
+
+```java
+protected AutoConfigurationEntry getAutoConfigurationEntry(AutoConfigurationMetadata autoConfigurationMetadata,
+			AnnotationMetadata annotationMetadata) {
+		if (!isEnabled(annotationMetadata)) {
+			return EMPTY_ENTRY;
+		}
+		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);//注意这行代码
+		configurations = removeDuplicates(configurations);
+		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		checkExcludedClasses(configurations, exclusions);
+		configurations.removeAll(exclusions);
+		configurations = filter(configurations, autoConfigurationMetadata);
+		fireAutoConfigurationImportEvents(configurations, exclusions);
+		return new AutoConfigurationEntry(configurations, exclusions);
+	}
+```
+
+getCandidateConfigurations()
+
+```java
+protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+		List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(),
+				getBeanClassLoader());//注意这行代码
+		Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you "
+				+ "are using a custom packaging, make sure that file is correct.");
+		return configurations;
+	}
+```
+
+loadFactoryNames()
+
+```java
+public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader) {
+    	//获取类的全路径
+        String factoryTypeName = factoryType.getName();
+        return (List)loadSpringFactories(classLoader).getOrDefault(factoryTypeName, Collections.emptyList());//注意这行代码
+    }
+```
+
+loadSpringFactories()
+
+```java
+    private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
+        MultiValueMap<String, String> result = (MultiValueMap)cache.get(classLoader);
+        if (result != null) {
+            return result;
+        } else {
+            try {
+                //获取类路径下的资源"META-INF/spring.factories
+                Enumeration<URL> urls = classLoader != null ? classLoader.getResources("META-INF/spring.factories") : ClassLoader.getSystemResources("META-INF/spring.factories");
+                LinkedMultiValueMap result = new LinkedMultiValueMap();
+
+                while(urls.hasMoreElements()) {
+                    URL url = (URL)urls.nextElement();
+                    UrlResource resource = new UrlResource(url);
+                    //将URL转换成Properties
+                    Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+                    Iterator var6 = properties.entrySet().iterator();
+
+                    while(var6.hasNext()) {
+                        Entry<?, ?> entry = (Entry)var6.next();
+                        String factoryTypeName = ((String)entry.getKey()).trim();
+                        String[] var9 = StringUtils.commaDelimitedListToStringArray((String)entry.getValue());
+                        int var10 = var9.length;
+
+                        for(int var11 = 0; var11 < var10; ++var11) {
+                            String factoryImplementationName = var9[var11];
+                            result.add(factoryTypeName, factoryImplementationName.trim());
+                        }
+                    }
+                }
+
+                cache.put(classLoader, result);
+                return result;
+            } catch (IOException var13) {
+                throw new IllegalArgumentException("Unable to load factories from location [META-INF/spring.factories]", var13);
+            }
+        }
+    }
+```
+
+
+
+以HttpEncodingAutoConfiguration类为例：
+
+```java
+@Configuration(proxyBeanMethods = false)//表示这是一个配置类
+@EnableConfigurationProperties(HttpProperties.class)//启动指定类的 ConfigurationProperties功能；将配置文件中对应的值和HttpEncodingProperties绑定起来；并把 HttpEncodingProperties加入到ioc容器中 
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)///判断当前应用是否为一个web应用，是则改配置类生效；@Conditional是Spring顶层注解，用来根据条件决定配置是否生效
+@ConditionalOnClass(CharacterEncodingFilter.class)//判断当前项目有没有这个类 CharacterEncodingFilter；SpringMVC中进行乱码解决的过滤器； 
+@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true) //判断配置文件中是否存在某个配置  spring.http.encoding.enabled；如果不存在，判断也是成立的 //即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的； 
+public class HttpEncodingAutoConfiguration {
+
+    //SpringBoot的配置文件映射了 
+	private final HttpProperties.Encoding properties;
+
+    //只有一个有参构造器的情况下，参数的值就会从容器中拿 
+	public HttpEncodingAutoConfiguration(HttpProperties properties) {
+		this.properties = properties.getEncoding();
+	}
+
+    ///给容器中添加一个组件，这个组件的某些值需要从properties中获取 
+	@Bean
+	@ConditionalOnMissingBean //判断容器没有这个组件
+	public CharacterEncodingFilter characterEncodingFilter() {
+		CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
+		filter.setEncoding(this.properties.getCharset().name());
+		filter.setForceRequestEncoding(this.properties.shouldForce(Type.REQUEST));
+		filter.setForceResponseEncoding(this.properties.shouldForce(Type.RESPONSE));
+		return filter;
+	}
+
+	@Bean
+	public LocaleCharsetMappingsCustomizer localeCharsetMappingsCustomizer() {
+		return new LocaleCharsetMappingsCustomizer(this.properties);
+	}
+
+	private static class LocaleCharsetMappingsCustomizer
+			implements WebServerFactoryCustomizer<ConfigurableServletWebServerFactory>, Ordered {
+
+		private final HttpProperties.Encoding properties;
+
+		LocaleCharsetMappingsCustomizer(HttpProperties.Encoding properties) {
+			this.properties = properties;
+		}
+
+		@Override
+		public void customize(ConfigurableServletWebServerFactory factory) {
+			if (this.properties.getMapping() != null) {
+				factory.setLocaleCharsetMappings(this.properties.getMapping());
+			}
+		}
+
+		@Override
+		public int getOrder() {
+			return 0;
+		}
+
+	}
+
+}
+```
+
+所有在配置文件中能配置的属性都是在xxxxProperties类中封装者；配置文件能配置什么就可以参照某个功 能对应的这个属性类
+
+```java
+@ConfigurationProperties(prefix = "spring.http")
+public class HttpProperties {
+
+	/**
+	 * Whether logging of (potentially sensitive) request details at DEBUG and TRACE level
+	 * is allowed.
+	 */
+	private boolean logRequestDetails;
+
+	/**
+	 * HTTP encoding properties.
+	 */
+	private final Encoding encoding = new Encoding();
+
+	public boolean isLogRequestDetails() {
+		return this.logRequestDetails;
+	}
+
+	public void setLogRequestDetails(boolean logRequestDetails) {
+		this.logRequestDetails = logRequestDetails;
+	}
+
+	public Encoding getEncoding() {
+		return this.encoding;
+	}
+
+	/**
+	 * Configuration properties for http encoding.
+	 */
+	public static class Encoding {
+
+		public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
+
+		/**
+		 * Charset of HTTP requests and responses. Added to the "Content-Type" header if
+		 * not set explicitly.
+		 */
+		private Charset charset = DEFAULT_CHARSET;
+
+		/**
+		 * Whether to force the encoding to the configured charset on HTTP requests and
+		 * responses.
+		 */
+		private Boolean force;
+
+		/**
+		 * Whether to force the encoding to the configured charset on HTTP requests.
+		 * Defaults to true when "force" has not been specified.
+		 */
+		private Boolean forceRequest;
+
+		/**
+		 * Whether to force the encoding to the configured charset on HTTP responses.
+		 */
+		private Boolean forceResponse;
+
+		/**
+		 * Locale in which to encode mapping.
+		 */
+		private Map<Locale, Charset> mapping;
+
+		public Charset getCharset() {
+			return this.charset;
+		}
+
+		public void setCharset(Charset charset) {
+			this.charset = charset;
+		}
+
+		public boolean isForce() {
+			return Boolean.TRUE.equals(this.force);
+		}
+
+		public void setForce(boolean force) {
+			this.force = force;
+		}
+
+		public boolean isForceRequest() {
+			return Boolean.TRUE.equals(this.forceRequest);
+		}
+
+		public void setForceRequest(boolean forceRequest) {
+			this.forceRequest = forceRequest;
+		}
+
+		public boolean isForceResponse() {
+			return Boolean.TRUE.equals(this.forceResponse);
+		}
+
+		public void setForceResponse(boolean forceResponse) {
+			this.forceResponse = forceResponse;
+		}
+
+		public Map<Locale, Charset> getMapping() {
+			return this.mapping;
+		}
+
+		public void setMapping(Map<Locale, Charset> mapping) {
+			this.mapping = mapping;
+		}
+
+		public boolean shouldForce(Type type) {
+			Boolean force = (type != Type.REQUEST) ? this.forceResponse : this.forceRequest;
+			if (force == null) {
+				force = this.force;
+			}
+			if (force == null) {
+				force = (type == Type.REQUEST);
+			}
+			return force;
+		}
+
+		public enum Type {
+
+			REQUEST, RESPONSE
+
+		}
+
+	}
+
+}
+```
+
+
+
+精髓：
+
+ 1）、SpringBoot启动会加载大量的自动配置类
+  2）、我们看我们需要的功能有没有SpringBoot默认写好的自动配置类；
+  3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）
+
+ 4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们就可以在配置文件中指定这 些属性的值；
+
+xxxxAutoConﬁgurartion：自动配置类；
+给容器中添加组件
+
+xxxxProperties:封装配置文件中相关属性；
+
+
 
