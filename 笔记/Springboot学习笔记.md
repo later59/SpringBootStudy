@@ -1017,13 +1017,15 @@ java -jar spring-boot-02-conﬁg-02-0.0.1-SNAPSHOT.jar --server.port=8087 --serv
 
 # 九、自动配置原理
 
+## 1、自动配置介绍
+
 官方配置参考地址：
 
 目录找：Common application properties
 
 https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties
 
-@SpringBootApplication注解：
+**@SpringBootApplication注解：**
 
 ```java
 @Target(ElementType.TYPE)
@@ -1037,7 +1039,7 @@ https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#comm
 @ConfigurationPropertiesScan
 ```
 
-@EnableAutoConfiguration注解：利用AutoConfigurationImportSelector给容器中导入组件
+**@EnableAutoConfiguration注解：利用AutoConfigurationImportSelector给容器中导入组件**
 
 ```java
 @Target(ElementType.TYPE)
@@ -1048,9 +1050,9 @@ https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#comm
 @Import(AutoConfigurationImportSelector.class)
 ```
 
-AutoConfigurationImportSelector.class
+**AutoConfigurationImportSelector类**
 
-selectImports()方法
+**selectImports()方法**
 
 ```java
 public String[] selectImports(AnnotationMetadata annotationMetadata) {
@@ -1065,7 +1067,7 @@ public String[] selectImports(AnnotationMetadata annotationMetadata) {
 	}
 ```
 
-getAutoConfigurationEntry()：方法
+**getAutoConfigurationEntry()**
 
 ```java
 protected AutoConfigurationEntry getAutoConfigurationEntry(AutoConfigurationMetadata autoConfigurationMetadata,
@@ -1085,7 +1087,7 @@ protected AutoConfigurationEntry getAutoConfigurationEntry(AutoConfigurationMeta
 	}
 ```
 
-getCandidateConfigurations()
+**getCandidateConfigurations()**
 
 ```java
 protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
@@ -1097,7 +1099,7 @@ protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, A
 	}
 ```
 
-loadFactoryNames()
+**loadFactoryNames()**
 
 ```java
 public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable ClassLoader classLoader) {
@@ -1107,7 +1109,7 @@ public static List<String> loadFactoryNames(Class<?> factoryType, @Nullable Clas
     }
 ```
 
-loadSpringFactories()
+**loadSpringFactories()**
 
 ```java
     private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoader classLoader) {
@@ -1151,7 +1153,7 @@ loadSpringFactories()
 
 
 
-以HttpEncodingAutoConfiguration类为例：
+**以HttpEncodingAutoConfiguration类为例：**
 
 ```java
 @Configuration(proxyBeanMethods = false)//表示这是一个配置类
@@ -1242,6 +1244,7 @@ public class HttpProperties {
 
 	/**
 	 * Configuration properties for http encoding.
+	 在properties中可以配置的属性
 	 */
 	public static class Encoding {
 
@@ -1337,15 +1340,19 @@ public class HttpProperties {
 }
 ```
 
+根据当前不同的条件判断，决定这个配置类是否生效
+
+一但这个配置类生效，这个配置类就会给容器中添加各种组件，这些组件的属性是从对应的properties类中获取 的，这些类里面的每一个属性又是和配置文件绑定的
 
 
-精髓：
 
- 1）、SpringBoot启动会加载大量的自动配置类
-  2）、我们看我们需要的功能有没有SpringBoot默认写好的自动配置类；
-  3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）
+**精髓：**
 
- 4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们就可以在配置文件中指定这 些属性的值；
+ **1）、SpringBoot启动会加载大量的自动配置类**
+  **2）、我们看我们需要的功能有没有SpringBoot默认写好的自动配置类；**
+  **3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件有，我们就不需要再来配置了）**
+
+ **4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们就可以在配置文件中指定这 些属性的值；**
 
 xxxxAutoConﬁgurartion：自动配置类；
 给容器中添加组件
@@ -1353,4 +1360,24 @@ xxxxAutoConﬁgurartion：自动配置类；
 xxxxProperties:封装配置文件中相关属性；
 
 
+
+## 2、@Conditional
+
+@Conditional派生注解（Spring注解版原生的@Conditional作用） 
+作用：必须是@Conditional指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；
+
+| @Conditional扩展注解            | 作用（判断是否满足当前指定条件）                 |
+| :------------------------------ | :----------------------------------------------- |
+| @ConditionalOnJava              | 系统的java版本是否符合要求                       |
+| @ConditionalOnBean              | 容器中存在指定Bean                               |
+| @ConditionalOnMissingBean       | 容器中不存在指定Bean                             |
+| @ConditionalOnExpression        | 满足SpEL表达式指定                               |
+| @ConditionalOnClass             | 系统中有指定的类                                 |
+| @ConditionalOnMissingClass      | 系统中没有指定的类                               |
+| @ConditionalOnSingleCandidate   | 容器中只有一个指定的Bean，或者这个Bean是首选Bean |
+| @ConditionalOnProperty          | 系统中指定的属性是否有指定的值                   |
+| @ConditionalOnResource          | 类路径下是否存在指定资源文件                     |
+| @ConditionalOnWebApplication    | 当前是web环境                                    |
+| @ConditionalOnNotWebApplication | 当前不是web环境                                  |
+| @ConditionalOnJndi              | JNDI存在指定项                                   |
 
