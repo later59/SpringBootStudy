@@ -1381,3 +1381,93 @@ xxxxProperties:封装配置文件中相关属性；
 | @ConditionalOnNotWebApplication | 当前不是web环境                                  |
 | @ConditionalOnJndi              | JNDI存在指定项                                   |
 
+## 3、如何知道哪些自动配置类生效
+
+在配置文件中添加：debug=true  来让控制台打印自动配置报告
+
+```java
+============================
+CONDITIONS EVALUATION REPORT
+============================
+
+
+Positive matches:(启用的自动配置)
+-----------------
+
+   DispatcherServletAutoConfiguration matched:
+      - @ConditionalOnClass found required class 'org.springframework.web.servlet.DispatcherServlet' (OnClassCondition)
+      - found 'session' scope (OnWebApplicationCondition)
+
+   DispatcherServletAutoConfiguration.DispatcherServletConfiguration matched:
+      - @ConditionalOnClass found required class 'javax.servlet.ServletRegistration' (OnClassCondition)
+      - Default DispatcherServlet did not find dispatcher servlet beans (DispatcherServletAutoConfiguration.DefaultDispatcherServletCondition)
+          
+          
+          
+          
+Negative matches:(没用配置成功的自动配置类)
+-----------------
+
+   ActiveMQAutoConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'javax.jms.ConnectionFactory' (OnClassCondition)
+
+   AopAutoConfiguration:
+      Did not match:
+         - @ConditionalOnClass did not find required class 'org.aspectj.lang.annotation.Aspect' (OnClassCondition)
+
+```
+
+# 十：日志框架分类和选择
+
+## 1、日志框架的选择
+
+| 日志门面  （日志的抽象层）                                   | 日志实现                                       |
+| ------------------------------------------------------------ | ---------------------------------------------- |
+| ~~JCL（Jakarta  Commons Logging）~~  ~~jboss-logging~~  SLF4j（Simple  Logging Facade for Java） | Log4j  JUL（java.util.logging）Log4j2  Logback |
+
+JCL：上一次更新在2014年。
+
+jboss-logging：不是为普通程序员用
+
+
+
+Log4j：与LogBack，SLF4j是同一个人编写，有性能问题
+
+Log4j2：没有和大多数框架适配
+
+Logback：与SLF4j适配性更好
+
+SpringBoot选用SLF4j与Logback做为日志框架
+
+
+
+## 2、SLF4j的使用
+
+1）如何在系统中使用SLF4j
+
+以后开发的时候，日志记录方法的调用，不应该来直接调用日志的实现类，而是调用日志抽象层里面的方法；
+
+导入slf4j以及Logback的实现jar（也可以使用其他的实现）
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class HelloWorld {
+  public static void main(String[] args) {
+    Logger logger = LoggerFactory.getLogger(HelloWorld.class);
+    logger.info("Hello World");
+  }
+}
+```
+
+图示：
+
+![](./images/17.jpg)
+
+每一个日志的实现框架都有自己的配置文件，使用slf4j以后，**配置文件还是做成日志实现框架自己本身的配置文件**
+
+
+
+## 3、遗留问题
