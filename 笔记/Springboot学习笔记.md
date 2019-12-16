@@ -1487,3 +1487,106 @@ public class HelloWorld {
 ③、导入slf4j其他的实现
 
 ## 4、SpringBoot与日志的关系
+
+①：SpringBoot底层也是使用slf4j+logback的方式进行日志记录
+
+②：SpringBoot也把其他的日志都替换成了slf4j
+
+③：引用中间包
+
+## 5、如果引入其他框架，一定要把这个框架的默认日志移除掉么？
+
+SpringBoot能自动适配所有的日志，而且底层使用slf4j+Logback的方式记录日志，引入其他框架的时候，只需要把这个框架依赖的日志框架排除掉。
+
+
+
+## 6、日志的使用
+
+代码：唯一测试类中
+
+### ①：默认配置
+
+```java
+@SpringBootTest
+class SpringbootLoggingApplicationTests {
+
+    //记录器
+    Logger logger=LoggerFactory.getLogger(getClass());
+
+    @Test
+    void contextLoads() {
+        //日志级别
+        //由低到高
+        //可以调整输出的日志级别
+        logger.trace("这是trace日志。");
+        logger.debug("这是debug日志。");
+        logger.info("这是info日志。");
+        logger.warn("这是warn日志。");
+        logger.error("这是error日志。");
+    }
+
+}
+```
+
+```txt
+日志输出格式： 
+	%d表示日期时间，
+	%thread表示线程名，
+    %‐5level：级别从左显示5个字符宽度 
+    %logger{50} 表示logger名字长50个字符，否则按照句点分割。 
+    %msg：日志消息， 
+    %n是换行符           
+    ‐‐>    
+    %d{yyyy‐MM‐dd HH:mm:ss.SSS} [%thread] %‐5level %logger{50} ‐ %msg%n
+
+```
+
+### ②：SpringBoot修改默认配置
+
+```properties
+# 日志级别
+logging.level.com.rock=trace
+# 不指定路径，在当前项目下生成springboot.log日志
+#logging.file.name=springboot.log
+# 可以指定完整路径
+#logging.file.name=E:/springboot.log
+
+# 在当前磁盘的根目录下创建springboot文件夹，使用spring.log作为默认文件  一般都配置这个
+logging.file.path=/springboot
+
+# 在控制台输出的日志格式
+#logging.pattern.console=%d{yyyy‐MM‐dd} [%thread] %‐5level %logger{50} ‐ %msg%n
+# 指定文件中日志输出的格式
+#logging.pattern.file=%d{yyyy‐MM‐dd} === [%thread] === %‐5level === %logger{50} ==== %msg%n
+
+```
+
+
+
+### ③：指定配置
+
+给类路径下放上每个日志框架自己的配置文件即可；SpringBoot就不使用他默认配置的了
+
+| Logging System          | Customization                                                |
+| ----------------------- | ------------------------------------------------------------ |
+| Logback                 | logback-spring.xml , logback-spring.groovy , logback.xml or logback.groovy |
+| Log4j2                  | log4j2-spring.xml or log4j2.xml                              |
+| JDK (Java Util Logging) | logging.properties                                           |
+
+logback.xml：直接就被日志框架识别了； 
+
+logback-spring.xml：日志框架就不直接加载日志的配置项，由SpringBoot解析日志配置，可以使用SpringBoot 的高级Proﬁle功能
+
+```xml
+<springProfile name="staging">     <!‐‐ configuration to be enabled when the "staging" profile is active ‐‐>    可以指定某段配置只在某个环境下生效    </springProfile> 
+```
+
+例如：
+
+```xml
+<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">         <!‐        日志输出格式： %d表示日期时间，              %thread表示线程名，              %‐5level：级别从左显示5个字符宽度              %logger{50} 表示logger名字长50个字符，否则按照句点分割。               %msg：日志消息，              %n是换行符                      ‐‐>         <layout class="ch.qos.logback.classic.PatternLayout">             <springProfile name="dev">                 <pattern>%d{yyyy‐MM‐dd HH:mm:ss.SSS} ‐‐‐‐> [%thread] ‐‐‐> %‐5level  %logger{50} ‐ %msg%n</pattern>             </springProfile>             <springProfile name="!dev">                 <pattern>%d{yyyy‐MM‐dd HH:mm:ss.SSS} ==== [%thread] ==== %‐5level  %logger{50} ‐ %msg%n</pattern>             </springProfile>         </layout>     </appender>
+
+```
+
+如果使用logback.xml作为日志配置文件，还要使用proﬁle功能，会有以下错误
+**no applicable action for [springProfile]** 
