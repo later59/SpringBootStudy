@@ -1584,8 +1584,25 @@ logback-spring.xml：日志框架就不直接加载日志的配置项，由Sprin
 例如：
 
 ```xml
-<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">         <!‐        日志输出格式： %d表示日期时间，              %thread表示线程名，              %‐5level：级别从左显示5个字符宽度              %logger{50} 表示logger名字长50个字符，否则按照句点分割。               %msg：日志消息，              %n是换行符                      ‐‐>         <layout class="ch.qos.logback.classic.PatternLayout">             <springProfile name="dev">                 <pattern>%d{yyyy‐MM‐dd HH:mm:ss.SSS} ‐‐‐‐> [%thread] ‐‐‐> %‐5level  %logger{50} ‐ %msg%n</pattern>             </springProfile>             <springProfile name="!dev">                 <pattern>%d{yyyy‐MM‐dd HH:mm:ss.SSS} ==== [%thread] ==== %‐5level  %logger{50} ‐ %msg%n</pattern>             </springProfile>         </layout>     </appender>
-
+    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+        <!--
+        日志输出格式：
+			%d表示日期时间，
+			%thread表示线程名，
+			%-5level：级别从左显示5个字符宽度
+			%logger{50} 表示logger名字最长50个字符，否则按照句点分割。
+			%msg：日志消息，
+			%n是换行符
+        -->
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <springProfile name="dev">
+                <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS}---> [%thread] %level ---> %logger{50} - %msg%n</pattern>
+            </springProfile>
+            <springProfile name="!dev">
+                <pattern>%d{yyyy‐MM‐dd HH:mm:ss.SSS} ==== [%thread] ==== %‐5level  %logger{50} ‐ %msg%n</pattern>
+            </springProfile>
+        </layout>
+    </appender>
 ```
 
 如果使用logback.xml作为日志配置文件，还要使用proﬁle功能，会有以下错误
