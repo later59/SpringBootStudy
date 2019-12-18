@@ -1607,3 +1607,51 @@ logback-spring.xml：日志框架就不直接加载日志的配置项，由Sprin
 
 如果使用logback.xml作为日志配置文件，还要使用proﬁle功能，会有以下错误
 **no applicable action for [springProfile]** 
+
+
+
+# 十一、SpringBoot与WEB开发
+
+## 1、SpringBoot对静态资源的映射规则
+
+```java
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            if (!this.resourceProperties.isAddMappings()) {
+                logger.debug("Default resource handling disabled");
+            } else {
+                Duration cachePeriod = this.resourceProperties.getCache().getPeriod();
+                CacheControl cacheControl = this.resourceProperties.getCache().getCachecontrol().toHttpCacheControl();
+                if (!registry.hasMappingForPattern("/webjars/**")) {
+                    this.customizeResourceHandlerRegistration(registry.addResourceHandler(new String[]{"/webjars/**"}).addResourceLocations(new String[]{"classpath:/META-INF/resources/webjars/"}).setCachePeriod(this.getSeconds(cachePeriod)).setCacheControl(cacheControl));
+                }
+
+                String staticPathPattern = this.mvcProperties.getStaticPathPattern();
+                if (!registry.hasMappingForPattern(staticPathPattern)) {
+                    this.customizeResourceHandlerRegistration(registry.addResourceHandler(new String[]{staticPathPattern}).addResourceLocations(WebMvcAutoConfiguration.getResourceLocations(this.resourceProperties.getStaticLocations())).setCachePeriod(this.getSeconds(cachePeriod)).setCacheControl(cacheControl));
+                }
+
+            }
+        }
+```
+
+1)、所有的/webjars/**，都去 classpath:/METAINF/resources/webjars/ 找资源
+
+​		webjars：以jar包的方式引入   https://www.webjars.org/
+
+```xml
+<!--引入jQuery-->
+        <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>jquery</artifactId>
+            <version>3.3.1</version>
+        </dependency>
+```
+
+
+
+
+
+
+
+
+
