@@ -1615,6 +1615,12 @@ logback-spring.xml：日志框架就不直接加载日志的配置项，由Sprin
 ## 1、SpringBoot对静态资源的映射规则
 
 ```java
+@ConfigurationProperties(prefix = "spring.resources", ignoreUnknownFields = false)
+public class ResourceProperties {
+//可以设置和静态资源有关的参数，缓存时间等
+```
+
+```java
 public void addResourceHandlers(ResourceHandlerRegistry registry) {
             if (!this.resourceProperties.isAddMappings()) {
                 logger.debug("Default resource handling disabled");
@@ -1632,9 +1638,21 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
             }
         }
+
+
+//配置首页
+		@Bean
+		public WelcomePageHandlerMapping welcomePageHandlerMapping(ApplicationContext applicationContext,
+				FormattingConversionService mvcConversionService, ResourceUrlProvider mvcResourceUrlProvider) {
+			WelcomePageHandlerMapping welcomePageHandlerMapping = new WelcomePageHandlerMapping(
+					new TemplateAvailabilityProviders(applicationContext), applicationContext, getWelcomePage(),
+					this.mvcProperties.getStaticPathPattern());
+			welcomePageHandlerMapping.setInterceptors(getInterceptors(mvcConversionService, mvcResourceUrlProvider));
+			return welcomePageHandlerMapping;
+		}
 ```
 
-1)、所有的/webjars/**，都去 classpath:/METAINF/resources/webjars/ 找资源
+**1)、所有的/webjars/**，都去 classpath:/METAINF/resources/webjars/ 找资源**
 
 ​		webjars：以jar包的方式引入   https://www.webjars.org/
 
@@ -1647,11 +1665,72 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
         </dependency>
 ```
 
+**2）、"/**"：访问当前项目的任何资源（静态资源的文件夹）**
+
+```java
+"classpath:/META-INF/resources/"
+"classpath:/resources/"
+"classpath:/static/"
+"classpath:/public/"
+"/**":当前项目根路径
+```
+
+**3）、欢迎页；静态资源文件夹下所有index.html页面**
 
 
 
+## 2、模板引擎
 
+thymeleaf：语法更简单，功能更强大
 
+### 1)、引入thymeleaf
+
+```xml
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+### 2)、thymeleaf自动配置
+
+```java
+@ConfigurationProperties(prefix = "spring.thymeleaf")
+public class ThymeleafProperties {
+
+	private static final Charset DEFAULT_ENCODING = StandardCharsets.UTF_8;
+
+	public static final String DEFAULT_PREFIX = "classpath:/templates/";//前缀
+
+	public static final String DEFAULT_SUFFIX = ".html";//后缀
+	//只需要吧HTML页面放在classpath:/templates/，templates就会自动渲染
+```
+
+## 3）、测试thymeleaf的使用
+
+①：引入thymeleaf
+
+```xml
+<dependency>
+   <groupId>org.springframework.boot</groupId>
+   <artifactId>spring-boot-starter-thymeleaf</artifactId>
+</dependency>
+```
+
+②：在resources/templates下编写success.html
+
+③：编写Controller
+
+```java
+@Controller//注意这里不要用RestController
+public class HelloController {
+
+    @RequestMapping(value = "/success", method = RequestMethod.GET)
+    public String success() {
+        return "success";//返回的字符串和HTML页面名称一致
+    }
+}
+```
 
 
 

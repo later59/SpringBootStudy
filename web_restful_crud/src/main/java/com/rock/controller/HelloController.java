@@ -1,15 +1,21 @@
 package com.rock.controller;
 
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseBody;
 
-@RestController
-@RequestMapping(value = "/hello")
+@Controller
 public class HelloController {
 
-    @RequestMapping(method = RequestMethod.GET)
+    @ResponseBody
+    @RequestMapping(value = "/hello", method = RequestMethod.GET)
     public String helloWord() {
         return "Hello Word";
+    }
+
+    @RequestMapping(value = "/success", method = RequestMethod.GET)
+    public String success() {
+        return "success";
     }
 }
