@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
 </head>
 <body>
-<h1>测试Success</h1>
+<!--th:text 将div里面的文本内容设置为指定内容-->
+<div th:text="${hello}">div中的信息</div>
 </body>
 </html>

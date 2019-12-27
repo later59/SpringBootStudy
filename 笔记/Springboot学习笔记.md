@@ -1706,7 +1706,7 @@ public class ThymeleafProperties {
 	//只需要吧HTML页面放在classpath:/templates/，templates就会自动渲染
 ```
 
-## 3）、测试thymeleaf的使用
+### 3）、测试thymeleaf的使用
 
 ①：引入thymeleaf
 
@@ -1719,7 +1719,7 @@ public class ThymeleafProperties {
 
 ②：在resources/templates下编写success.html
 
-③：编写Controller
+③：编写Controller，访问该地址
 
 ```java
 @Controller//注意这里不要用RestController
@@ -1732,5 +1732,122 @@ public class HelloController {
 }
 ```
 
+### 4）、thymeleaf语法
 
+1、导入thymeleaf的名称空间
+
+```html
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+```
+
+2、使用thymeleaf语法
+
+```java
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--th:text 将div里面的文本内容设置为指定内容-->
+<div th:text="${hello}">div中的信息</div>
+</body>
+</html>
+```
+
+3、注意后台代码的变化
+
+```java
+ @RequestMapping(value = "/success", method = RequestMethod.GET)
+    public String success(Map<String,Object> map) {
+        map.put("hello","你好啊");
+        return "success";
+    }
+```
+
+### 5)、语法规则
+
+| 标签                                                  | 作用               |
+| ----------------------------------------------------- | ------------------ |
+| th:insert、th:replace                                 | 片段包含           |
+| th:each                                               | 遍历               |
+| th:if、th:unless、th:switch、th:case                  | 条件判断           |
+| th:object、th:with                                    | 变量声明           |
+| th:attr、th:attrprepend、th:attrappend                | 任意属性修改       |
+| th: value、th:href、th:src.....                       | 修改指定属性默认值 |
+| th:text（转义特殊字符）、th:utext（不转义特殊字符）、 | 修改标签体文本内容 |
+| th:fragment                                           | 声明片段           |
+| th:remove                                             | 删除               |
+
+表达式：
+
+```properties
+Simple expressions:(表达式语法)
+Variable Expressions: ${...} ：获取变量值；OGNL
+Selection Variable Expressions: *{...} 与 ${...}功能一样，补充功能配合th:object进行使用
+Message Expressions: #{...} 获取国际化内容
+Link URL Expressions: @{...} 定义URL链接
+Fragment Expressions: ~{...}
+
+Literals
+Text literals: 'one text' , 'Another one!' ,… 
+Number literals: 0 , 34 , 3.0 , 12.3 ,… 
+Boolean literals: true , false 
+Null literal: null 
+Literal tokens: one , sometext , main ,…
+
+Text operations:
+String concatenation: + 
+Literal substitutions: |The name is ${name}|
+
+Arithmetic operations:
+Binary operators: + , - , * , / , % 
+Minus sign (unary operator): -
+
+Boolean operations:
+Binary operators: and , or 
+Boolean negation (unary operator): ! , not
+Comparisons and equality:
+Comparators: > , < , >= , <= ( gt , lt , ge , le ) 
+Equality operators: == , != ( eq , ne )
+
+Conditional operators:
+If-then: (if) ? (then) 
+If-then-else: (if) ? (then) : (else)
+Default: (value) ?: (defaultvalue)
+Special tokens:
+Page 17 of 106
+No-Operation: _
+```
+
+内置对象
+
+```properties
+#ctx : the context object. 
+#vars: the context variables. 
+#locale : the context locale. 
+#request : (only in Web Contexts) the HttpServletRequest object. 
+#response : (only in Web Contexts) the HttpServletResponse object. 
+#session : (only in Web Contexts) the HttpSession object. 
+#servletContext : (only in Web Contexts) the ServletContext object.
+#execInfo : information about the template being processed. 
+#messages : methods for obtaining externalized messages inside variables expressions, in the same way as they would be obtained using 
+#{…} syntax. 
+#uris : methods for escaping parts of URLs/URIs
+#conversions : methods for executing the configured conversion service (if any). 
+#dates : methods for java.util.Date objects: formatting, component extraction, etc. #calendars : analogous to 
+#dates , but for java.util.Calendar objects. 
+#numbers : methods for formatting numeric objects. 
+#strings : methods for String objects: contains, startsWith, prepending/appending, etc. #objects : methods for objects in general. 
+#bools : methods for boolean evaluation. 
+#arrays : methods for arrays. 
+#lists : methods for lists. 
+#sets : methods for sets.
+#maps : methods for maps. 
+#aggregates : methods for creating aggregates on arrays or collections. 
+#ids : methods for dealing with id attributes that might be repeated (for example, as a result of an iteration).
+
+
+```
 
