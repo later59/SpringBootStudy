@@ -1849,4 +1849,129 @@ No-Operation: _
 #ids : methods for dealing with id attributes that might be repeated (for example, as a result of an iteration).
 ```
 
-3、SpringMVC自动配置
+## 3、SpringMVC自动配置
+
+Spring Boot 自动配置好了SpringMVC
+
+以下是SpringBoot对SpringMVC的默认配置:**(WebMvcAutoConfiguration)**
+
+Inclusion of `ContentNegotiatingViewResolver` and `BeanNameViewResolver` beans.
+
+- 自动配置了ViewResolver（视图解析器：根据方法的返回值得到视图对象（View），视图对象决定如何渲染（转发？重定向？））
+- ContentNegotiatingViewResolver：组合所有的视图解析器的；
+- 如何定制：我们可以自己给容器中添加一个视图解析器；自动的将其组合进来
+
+```java
+ @Bean
+ public ViewResolver myView() {
+      return new myViewResolver();
+ }
+
+ private static class myViewResolver implements ViewResolver {
+   @Override
+   public View resolveViewName(String s, Locale locale) throws Exception {
+       return null;
+   }
+ }
+```
+
+可以在DispatcherServlet类的doDispatch方法打断点查看加载了哪些视图解析器
+
+- Support for serving static resources, including support for WebJars (see below).静态资源文件夹路径,webjars
+- Static `index.html` support. 静态首页访问
+- Custom `Favicon` support (see below).  favicon.ico
+
+自动注册了  `Converter`, `GenericConverter`, `Formatter` beans.
+
+- Converter：转换器；  public String hello(User user)：类型转换使用Converter
+- `Formatter`  格式化器；  2017.12.17===Date；
+
+```java
+//WebMvcAutoConfiguration类中
+@Bean
+@Override
+public FormattingConversionService mvcConversionService() {
+	WebConversionService conversionService =new WebConversionService(this.mvcProperties.getDateFormat());//在文件中配置日期格式化的规则
+		addFormatters(conversionService);
+	return conversionService;
+}
+```
+
+自定义转换器
+
+```java
+@Bean
+public myGenericConverter myGenericConverter() {
+	return new myGenericConverter();
+}
+
+private static class myGenericConverter implements GenericConverter {
+	@Override
+	public Set<ConvertiblePair> getConvertibleTypes() {
+		return null;
+	}
+
+	@Override
+	public Object convert(Object o, TypeDescriptor typeDescriptor, TypeDescriptor typeDescriptor1) {
+		return null;
+	}
+}
+```
+
+Support for `HttpMessageConverters` (see below).
+
+​	1、HttpMessageConverter：SpringMVC用来转换Http请求和响应的；User---Json；
+
+​	2、`HttpMessageConverters` 是从容器中确定；获取所有的HttpMessageConverter；
+
+​         自己给容器中添加HttpMessageConverter，只需要将自己的组件注册容器中（@Bean,@Component）
+
+Automatic registration of `MessageCodesResolver` (see below).定义错误代码生成规则
+
+Automatic use of a `ConfigurableWebBindingInitializer` bean (see below).
+
+我们可以配置一个ConfigurableWebBindingInitializer来替换默认的；（添加到容器）
+
+```java
+初始化WebDataBinder；
+请求数据=====JavaBean；
+```
+
+## 4、如何修改springBoot的默认配置
+
+模式：
+
+1）、springboot在自动配置很多组件的时候，先看容器中有没有用户自己配置的（@Bean、@Component）如果有就用用户配置的，如果没有，才自动配置；如果有些组件可以有多个（ViewResolver）将用户的配置和自己默认的组合起来
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
