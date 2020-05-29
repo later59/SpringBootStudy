@@ -1,6 +1,5 @@
 package com.rock;
 
-import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -24,10 +23,10 @@ public class WebRestfulCrudApplication {
         return new myViewResolver();
     }
 
-    @Bean
+   /* @Bean
     public myGenericConverter myGenericConverter() {
         return new myGenericConverter();
-    }
+    }*/
 
     private static class myViewResolver implements ViewResolver {
         @Override
@@ -36,7 +35,7 @@ public class WebRestfulCrudApplication {
         }
     }
 
-    private static class myGenericConverter implements GenericConverter {
+    /*private static class myGenericConverter implements GenericConverter {
         @Override
         public Set<ConvertiblePair> getConvertibleTypes() {
             return null;
@@ -46,5 +45,5 @@ public class WebRestfulCrudApplication {
         public Object convert(Object o, TypeDescriptor typeDescriptor, TypeDescriptor typeDescriptor1) {
             return null;
         }
-    }
+    }*/
 }
