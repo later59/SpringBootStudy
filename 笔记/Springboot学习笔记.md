@@ -2122,13 +2122,138 @@ public class WebMvcAutoConfiguration {
 
 1）、编写国际化配置文件
 
+2）、使用ResourceBundleMessageSource管理国际化资源文件
 
+3）、在页面使用  #{}  取出国际化内容
 
+4）、SpringBoot自动配置好了管理国际化资源文件的组件；
 
+```java
+	@Bean
+	@ConfigurationProperties(prefix = "spring.messages")
+	public MessageSourceProperties messageSourceProperties() {
+		return new MessageSourceProperties();//MessageSourceProperties类中定义了private String basename = "messages"; 我们的配置文件可以直接放在类路径下叫messages.properties
+	}
 
+	@Bean
+	public MessageSource messageSource(MessageSourceProperties properties) {
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        //设置国际化资源文件的基础名（去掉语言国家代码的）
+		if (StringUtils.hasText(properties.getBasename())) {
+			messageSource.setBasenames(StringUtils
+					.commaDelimitedListToStringArray(StringUtils.trimAllWhitespace(properties.getBasename())));
+		}
+		if (properties.getEncoding() != null) {
+			messageSource.setDefaultEncoding(properties.getEncoding().name());
+		}
+		messageSource.setFallbackToSystemLocale(properties.isFallbackToSystemLocale());
+		Duration cacheDuration = properties.getCacheDuration();
+		if (cacheDuration != null) {
+			messageSource.setCacheMillis(cacheDuration.toMillis());
+		}
+		messageSource.setAlwaysUseMessageFormat(properties.isAlwaysUseMessageFormat());
+		messageSource.setUseCodeAsDefaultMessage(properties.isUseCodeAsDefaultMessage());
+		return messageSource;
+	}
+```
 
+5)、页面获取国际化的值
 
+```html
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+		<meta name="description" content="">
+		<meta name="author" content="">
+		<title>Signin Template for Bootstrap</title>
+		<!-- Bootstrap core CSS -->
+		<!--<link href="asserts/css/bootstrap.min.css" rel="stylesheet">-->
+		<link th:href="@{/webjars/bootstrap/4.5.0/css/bootstrap.min.css}" rel="stylesheet">
+		<!-- Custom styles for this template -->
+		<!--<link href="asserts/css/signin.css" rel="stylesheet">-->
+		<link th:href="@{/asserts/css/signin.css}" rel="stylesheet">
+	</head>
 
+	<body class="text-center">
+		<form class="form-signin" action="dashboard.html">
+			<!--<img class="mb-4" src="asserts/img/bootstrap-solid.svg" alt="" width="72" height="72">-->
+			<img class="mb-4" th:src="@{/asserts/img/bootstrap-solid.svg}" alt="" width="72" height="72">
+			<h1 class="h3 mb-3 font-weight-normal" th:text="#{login.tip}">Please sign in</h1>
+			<label class="sr-only" th:text="#{login.username}">Username</label>
+			<input type="text" class="form-control" th:placeholder="#{login.username}" placeholder="Username" required="" autofocus="">
+			<label class="sr-only" th:text="#{login.password}">Password</label>
+			<input type="password" class="form-control" th:placeholder="#{login.password}" placeholder="Password" required="">
+			<div class="checkbox mb-3">
+				<label>
+          <input type="checkbox" value="remember-me">[[#{login.remember}]]
+        </label>
+			</div>
+			<button class="btn btn-lg btn-primary btn-block" type="submit" th:text="#{login.sign}">Sign in</button>
+			<p class="mt-5 mb-3 text-muted">© 2017-2018</p>
+			<a class="btn btn-sm" th:href="@{/index.html(l='zh_CN')}">中文</a>
+			<a class="btn btn-sm" th:href="@{/index.html(l='en_US')}">English</a>
+		</form>
+
+	</body>
+
+</html>
+```
+
+效果：根据浏览器语言设置的信息切换了国际化；
+
+6）、原理
+
+国际化Locale（区域信息对象）；LocaleResolver（获取区域信息对象）
+
+```java
+		@Bean
+		@ConditionalOnMissingBean
+		@ConditionalOnProperty(prefix = "spring.mvc", name = "locale")
+		public LocaleResolver localeResolver() {
+			if (this.mvcProperties.getLocaleResolver() == WebMvcProperties.LocaleResolver.FIXED) {
+				return new FixedLocaleResolver(this.mvcProperties.getLocale());
+			}
+			AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
+			localeResolver.setDefaultLocale(this.mvcProperties.getLocale());
+			return localeResolver;
+		}
+//默认的就是根据请求头带来的区域信息获取Locale进行国际化
+```
+
+7）、点击链接切换国际化
+
+```java
+/**
+ * 可以在连接上携带区域信息
+ */
+public class MyLocaleResolver implements LocaleResolver {
+    @Override
+    public Locale resolveLocale(HttpServletRequest httpServletRequest) {
+        String l = httpServletRequest.getParameter("l");
+        Locale locale = Locale.getDefault();
+        if (!StringUtils.isEmpty(l)) {
+            String[] split = l.split("_");
+            locale=new Locale(split[0],split[1]);
+        }
+        return locale;
+    }
+
+    @Override
+    public void setLocale(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Locale locale) {
+
+    }
+}
+```
+
+```java
+    //注意方法名要和LocaleResolver类名一样
+	@Bean
+    public LocaleResolver localeResolver() {
+        return new MyLocaleResolver();
+    }
+```
 
 
 
