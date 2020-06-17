@@ -43,7 +43,8 @@ public class MyMvcConfig implements WebMvcConfigurer {
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
                         //排除掉这几个请求，以及静态资源访问
-                        .excludePathPatterns("/index.html","/","/user/login").excludePathPatterns("/asserts/**","/webjars/**");
+                        .excludePathPatterns("/index.html","/","/user/login")
+                        .excludePathPatterns("/asserts/**","/webjars/**");
             }
         };
         return webMvcConfigurer;

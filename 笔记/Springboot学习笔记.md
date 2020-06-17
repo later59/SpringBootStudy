@@ -2257,9 +2257,90 @@ public class MyLocaleResolver implements LocaleResolver {
 
 ## 3、登录
 
+开发期间模板引擎页面修改以后，要实时生效
+
+1）、禁用模板引擎的缓存
+
+```
+# 禁用缓存
+spring.thymeleaf.cache=false 
+```
+
+2）、页面修改完成以后ctrl+f9：重新编译；
 
 
 
+登陆错误消息的显示
+
+```html
+<p style="color: red" th:text="${msg}" th:if="${not #strings.isEmpty(msg)}"></p>
+```
+
+## 4、拦截器进行登录检查
+
+### 1)、编写拦截器
+
+```java
+/**
+ * 拦截器，登录检查
+ */
+public class LoginHandlerInterceptor implements HandlerInterceptor {
+    /**
+     * 目标方法执行之前
+     * @param request
+     * @param response
+     * @param handler
+     * @return
+     */
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws ServletException, IOException {
+        if (ObjectUtils.isEmpty(request.getSession().getAttribute("loginName"))) {
+            //未登录
+            request.setAttribute("msg","没有权限，请登录");
+            request.getRequestDispatcher("index.html").forward(request,response);
+            return false;
+        } else {
+            //已登录
+            return true;
+        }
+    }
+}
+```
+
+### 2）、注册拦截器
+
+```java
+/**
+     * 设置请求跳转到登录页面
+     *
+     * @return
+     */
+    @Bean
+    public WebMvcConfigurer webMvcConfigurer() {
+        WebMvcConfigurer webMvcConfigurer = new WebMvcConfigurer() {
+
+            @Override
+            public void addViewControllers(ViewControllerRegistry registry) {
+                registry.addViewController("/").setViewName("login");
+                registry.addViewController("/index.html").setViewName("login");
+                registry.addViewController("/main.html").setViewName("dashboard");
+            }
+
+            /**
+             * 注册拦截器
+             * @param registry
+             */
+            @Override
+            public void addInterceptors(InterceptorRegistry registry) {
+                registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
+                        //排除掉这几个请求，以及静态资源访问
+                        .excludePathPatterns("/index.html","/","/user/login")
+                        .excludePathPatterns("/asserts/**","/webjars/**");
+            }
+        };
+        return webMvcConfigurer;
+    }
+```
 
 
 
