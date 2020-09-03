@@ -2,6 +2,10 @@ package com.rock.config;
 
 import com.rock.comment.LoginHandlerInterceptor;
 import com.rock.comment.MyLocaleResolver;
+import org.springframework.boot.autoconfigure.web.reactive.ReactiveWebServerFactoryCustomizer;
+import org.springframework.boot.web.reactive.server.ConfigurableReactiveWebServerFactory;
+import org.springframework.boot.web.server.ConfigurableWebServerFactory;
+import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -13,6 +17,9 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 //@EnableWebMvc
 @Configuration
 public class MyMvcConfig implements WebMvcConfigurer {
+
+
+
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         //浏览器发送 /rock 请求来到 success
@@ -43,8 +50,8 @@ public class MyMvcConfig implements WebMvcConfigurer {
             public void addInterceptors(InterceptorRegistry registry) {
                 registry.addInterceptor(new LoginHandlerInterceptor()).addPathPatterns("/**")
                         //排除掉这几个请求，以及静态资源访问
-                        .excludePathPatterns("/index.html","/","/user/login")
-                        .excludePathPatterns("/static/**","/webjars/**","/asserts/**");
+                        .excludePathPatterns("/index.html", "/", "/user/login")
+                        .excludePathPatterns("/static/**", "/webjars/**", "/asserts/**");
             }
         };
         return webMvcConfigurer;
@@ -55,7 +62,6 @@ public class MyMvcConfig implements WebMvcConfigurer {
     public LocaleResolver localeResolver() {
         return new MyLocaleResolver();
     }
-
 
 
 }

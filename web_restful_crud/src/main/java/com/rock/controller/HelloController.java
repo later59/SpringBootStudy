@@ -1,8 +1,10 @@
 package com.rock.controller;
 
+import com.rock.exception.UserNotExistException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Arrays;
@@ -14,7 +16,10 @@ public class HelloController {
 
     @ResponseBody
     @RequestMapping(value = "/hello", method = RequestMethod.GET)
-    public String helloWord() {
+    public String helloWord(@RequestParam("user") String user) {
+        if ("login".equals(user)){
+            throw new  UserNotExistException();
+        }
         return "Hello Word";
     }
 

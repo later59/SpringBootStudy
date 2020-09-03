@@ -19,7 +19,7 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
      * @param handler
      * @return
      */
-    @Override
+    /*@Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws ServletException, IOException {
         if (ObjectUtils.isEmpty(request.getSession().getAttribute("loginName"))) {
             //未登录
@@ -30,5 +30,5 @@ public class LoginHandlerInterceptor implements HandlerInterceptor {
             //已登录
             return true;
         }
-    }
+    }*/
 }

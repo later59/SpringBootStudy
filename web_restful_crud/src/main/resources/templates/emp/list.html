@@ -85,7 +85,7 @@
 					</div>
 				</main>
 				<form id="deleteEmpForm" method="post">
-					<input name="_method" value="delete" type="hidden"/>
+					<input type="hidden" name="_method" value="delete"/>
 				</form>
 			</div>
 		</div>
@@ -104,8 +104,7 @@
 		</script>
 		<script>
 			$(".deleteBtn").click(function () {
-				console.log("-----------")
-				$("#deleteEmpForm").attr("action",$(this).attr("del_del_uri")).submit();
+				$("#deleteEmpForm").attr("action",$(this).attr("del_uri")).submit();
 				return false;
 			})
 		</script>
