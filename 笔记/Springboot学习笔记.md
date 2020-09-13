@@ -3347,3 +3347,296 @@ docker run --name some-mysql -e MYSQL_ROOT_PASSWORD=my-secret-pw -d mysql:tag --
 
 # 十三、SpringBoot与数据访问
 
+## 1、JDBC
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-jdbc</artifactId>
+</dependency>
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <scope>runtime</scope>
+</dependency>
+```
+
+```properties
+spring:
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.3.21:3306/jdbc
+    driver-class-name: com.mysql.jdbc.Driver
+```
+
+效果：
+
+​	默认是用com.zaxxer.hikari.HikariDataSource作为数据源；
+
+​	数据源的相关配置都在DataSourceProperties里面；
+
+自动配置原理：
+
+org.springframework.boot.autoconfigure.jdbc：
+
+1、参考DataSourceConfiguration，根据配置创建数据源，默认使用Tomcat连接池；可以使用spring.datasource.type指定自定义的数据源类型；
+
+2、SpringBoot默认可以支持；
+
+```
+org.apache.tomcat.jdbc.pool.DataSource、HikariDataSource、BasicDataSource、
+```
+
+3、自定义数据源类型
+
+```java
+@Configuration(
+        proxyBeanMethods = false
+    )
+    @ConditionalOnMissingBean({DataSource.class})
+    @ConditionalOnProperty(
+        name = {"spring.datasource.type"}
+    )
+    static class Generic {
+        Generic() {
+        }
+
+        @Bean
+        DataSource dataSource(DataSourceProperties properties) {
+            //使用DataSourceBuilder创建数据源，利用反射创建响应type的数据源，并且绑定相关属性
+            return properties.initializeDataSourceBuilder().build();
+        }
+    }
+```
+
+4、操作数据库：自动配置了JdbcTemplate操作数据库
+
+## 2、整合Druid数据源
+
+```java
+//导入数据源即可
+@Configuration
+public class DruidConfig {
+
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @Bean
+    public DataSource druid(){
+        return  new DruidDataSource();
+    }
+
+    //配置Druid的监控
+    //1、配置一个管理后台的Servlet
+    @Bean
+    public ServletRegistrationBean statViewServlet(){
+        ServletRegistrationBean bean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
+        Map<String,String> initParams = new HashMap<>();
+
+        initParams.put("loginUsername","admin");
+        initParams.put("loginPassword","123456");
+        initParams.put("allow","");//默认就是允许所有访问
+        initParams.put("deny","192.168.3.18");//拒绝某个IP访问
+
+        bean.setInitParameters(initParams);
+        return bean;
+    }
+
+
+    //2、配置一个web监控的filter
+    @Bean
+    public FilterRegistrationBean webStatFilter(){
+        FilterRegistrationBean bean = new FilterRegistrationBean();
+        bean.setFilter(new WebStatFilter());
+
+        Map<String,String> initParams = new HashMap<>();
+        initParams.put("exclusions","*.js,*.css,/druid/*");
+
+        bean.setInitParameters(initParams);
+
+        bean.setUrlPatterns(Arrays.asList("/*"));
+
+        return  bean;
+    }
+}
+```
+
+```yaml
+spring:
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.3.22:3306/jdbc
+    driver-class-name: com.mysql.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+    #   配置监控统计拦截的filters，去掉后监控界面sql无法统计，'wall'用于防火墙
+    filters: stat,wall
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+```
+
+## 3、整合MyBatis
+
+### 1）、整合MyBatis
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.1.3</version>
+</dependency>
+```
+
+步骤：
+
+​	1）、配置数据源相关属性（见上一节Druid）
+
+​	2）、给数据库建表
+
+​	3）、创建JavaBean
+
+### 2）、注解版
+
+```java
+//指定这是一个操作数据库的mapper
+@Mapper
+public interface DepartmentMapper {
+
+    @Select("select * from department where id = #{id}")
+    Department getDeptById(Integer id);
+
+    @Delete("delete from department where id = #{id}")
+    int deleteDeptById(Integer id);
+
+    @Options(useGeneratedKeys = true,keyProperty = "id")
+    @Insert("insert into department(departmentName) values(#{departmentName})")
+    int insertDept(Department department);
+
+    @Update("update department set departmentName = #{departmentName} where id = #{id}")
+    int updateDept(Department department);
+}
+```
+
+### 3）、配置文件版
+
+```yaml
+mybatis:
+  # 开启驼峰命名  有mybatis全局配置文件的时候不能在配置文件中配置驼峰命名
+  #configuration:
+  #  map-underscore-to-camel-case: true
+  # 配置mybatis全局配置文件路径
+  config-location: classpath:mybatis/mybatis-config.xml
+  # 配置SQL映射文件mapper文件位置
+  mapper-locations: classpath:mybatis/mapper/*.xml
+```
+
+更多使用参照
+
+http://www.mybatis.org/spring-boot-starter/mybatis-spring-boot-autoconfigure/
+
+## 4、整合SpringData
+
+### 1）、SpringData简介
+
+![](./images/25.jpg)
+
+### 2）、整合SpringData JPA
+
+JPA:ORM（Object Relational Mapping）；
+
+1）、编写一个实体类（bean）和数据表进行映射，并且配置好映射关系；
+
+```java
+//使用JPA注解配置映射关系
+@Entity //告诉JPA这是一个实体类（和数据表映射的类）
+@Table(name = "tal_user") //@Table来指定和哪个数据表对应；如果省略默认表名就是user
+@JsonIgnoreProperties(value = { "hibernateLazyInitializer"})
+public class User {
+
+    @Id //表示这是一个主键
+    @GeneratedValue(strategy = GenerationType.IDENTITY)//自增主键
+    private Integer id;
+
+    @Column(name = "last_name",length = 50)//
+    private String lastName;
+
+    @Column
+    private String email;
+
+    @Column
+    private String userBir;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getUserBir() {
+        return userBir;
+    }
+
+    public void setUserBir(String userBir) {
+        this.userBir = userBir;
+    }
+}
+```
+
+
+
+2）、编写一个Dao接口来操作实体类对应的数据表（Repository）
+
+```java
+//继承JpaRepository来完成对数据库的操作
+@Repository
+public interface UserRepository extends JpaRepository<User, Integer> {
+}
+
+```
+
+3）、基本的配置
+
+```yaml
+spring:
+  datasource:
+    username: root
+    password: 123456
+    url: jdbc:mysql://192.168.3.22:3306/jpa
+    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update # 更新或者创建数据表结构
+    show-sql: true     # 控制台打印SQL
+```
+
+# 十四、SpringBoot启动配置 原理
